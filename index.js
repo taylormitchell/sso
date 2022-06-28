@@ -94,6 +94,8 @@ app.post('/login', (req, res) => {
     if(req.body.email === user.email && req.body.password === user.password) {
         res.cookie('token', user.jwt, {
             httpOnly: true,
+            domain: process.env.DOMAIN,
+            expires: new Date(Date.now() + 30*24*60*60*1000),
           });
         return res.redirect(redirectUrl);
     }

@@ -42,7 +42,12 @@ class Users {
 }
 
 function authenticate(req, res, next) {
-    const token = req.cookies.token || '';
+    let token;
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split("Bearer ")[1]
+    } else {
+        token = req.cookies.token || '';
+    }
     try {
         const decoded = jwt.verify(token, process.env.SECRET);
         res.locals.user = decoded;  

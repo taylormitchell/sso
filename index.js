@@ -62,7 +62,7 @@ app.get('/', authenticate, (req, res) => {
     }
 });
 
-app.get('/validate', authenticate, (req, res) => {
+app.use('/validate', authenticate, (req, res) => {
     if(res.locals.authenticated) {
         res.status(200).send('OK');
     } else {
@@ -71,21 +71,17 @@ app.get('/validate', authenticate, (req, res) => {
     }
 });
 
-app.post('/register', (req, res) => {
-    let users = new Users();
-    users.add({email: req.body.email, password: req.body.password});
-    users.save();
-    return res.redirect('/login');
-})
-
-app.get('/register', (req, res) => {
+app.get('/login', (req, res) => {
+    const redirectURL = req.query.redirectURL
+    const hiddenField = redirectURL ? `<input type="hidden" id="redirectURL" name="redirectURL" value="${redirectURL}">` : ""
     return res.send(`
-        <h1>Register</h1>
-        <form action="/register" method="POST">
+        <h1>Login</h1>
+        <form action="/login" method="POST">
             <label for="email">Email</label>
             <input type="text" id="email" name="email" placeholder="email">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" placeholder="Password">
+            ${hiddenField}
             <input type="submit" value="Login">
         </form>
     `)
@@ -93,8 +89,8 @@ app.get('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     const users = new Users();
-    const user = users.get(req.body.email);
-    const redirectUrl = req.body.url || '/';
+    const user = users.get(req.body.email) || {};
+    const redirectUrl = req.body.redirectURL || '/';
     if(req.body.email === user.email && req.body.password === user.password) {
         res.cookie('token', user.jwt, {
             httpOnly: true,
@@ -104,25 +100,11 @@ app.post('/login', (req, res) => {
     return res.redirect('/login');
 })
 
-app.get('/login', (req, res) => {
-    return res.send(`
-        <h1>Login</h1>
-        <form action="/login" method="POST">
-            <label for="email">Email</label>
-            <input type="text" id="email" name="email" placeholder="email">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Password">
-            <input type="submit" value="Login">
-        </form>
-    `)
-})
-
 // error handler
 app.use((err, req, res, next) => {
   res.status(400).send(err.message)
 })
 
 app.listen(app.get('port'), () => {
-
     console.log(`Find the server at: http://localhost:${app.get('port')}/`);
   });
